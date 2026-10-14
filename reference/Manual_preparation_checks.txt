@@ -1,0 +1,25 @@
+MITI TEXT PREPARATION AND CHECKS
+
+The original 40-page PDF is unchanged. Its repeated draft/citation footer and
+running headers are excluded from the text sent to the judge. The authors,
+version and revision date appear once. The cover's administrative material is
+kept in the original PDF and its notice is recorded in manual_preparation.json.
+All substantive content on PDF pages 2-40 is retained, including revision notes,
+definitions, anchors, examples, decision rules, FAQs and the original coding form.
+The text has not been summarized.
+
+Completed checks
+- Matched content on every retained page against the source extraction after
+  whitespace cleanup and the explicitly recorded layout transformations.
+- Checked the 20 table anchors for the four global ratings against the page
+  images and made each score-to-anchor association explicit in text.
+- Checked the two decision pyramids. Corrected the extraction's "Afpirm" to
+  "Affirm" on page 25 and preserved the order of the labels.
+- Checked the summary formulas and the rows and values of the page 33 table.
+- Visually reviewed the scoring and layout-sensitive pages listed in the JSON
+  record, including parsing, volley caps, persuasion, reflections and FAQs.
+- Confirmed that repeated citation footers are absent from the judge text and
+  that the original PDF is byte-for-byte unchanged.
+
+These checks establish fidelity of the prepared reference. Judge accuracy is
+evaluated separately against human coding.

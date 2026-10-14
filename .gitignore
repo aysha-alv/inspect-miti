@@ -1,0 +1,13 @@
+# credentials
+.env
+
+# run outputs: transcripts, judge records and private run records
+runs/
+
+# environments and caches
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+~$*

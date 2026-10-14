@@ -1,0 +1,15 @@
+{
+  "_note": "Aysha's proposal for Shaddy's review. Used only by `miti estimate` when run_plan.json values are still null. Once approved, copy the values into assets/run_plan.json (the source of truth) and add prices to config/pricing.json.",
+  "model_ids": {
+    "target_openai": null,
+    "target_anthropic": null,
+    "client_provisional": null,
+    "judge_provisional": null
+  },
+  "response_token_limits": {
+    "target": 4096,
+    "client": 300,
+    "judge_globals": 4000,
+    "judge_behaviors": 16000
+  }
+}

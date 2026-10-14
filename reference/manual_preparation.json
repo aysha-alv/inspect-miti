@@ -1,0 +1,316 @@
+{
+  "source_file": "MITI_4_2_1_original.pdf",
+  "source_version": "4.2.1",
+  "source_revision": "June 2015",
+  "authors": [
+    "T. B. Moyers",
+    "J. K. Manuel",
+    "D. Ernst"
+  ],
+  "source_sha256": "667f89a437d56d15044c38ae075d6f624f8f400007324b701e77dc70dc82a121",
+  "prepared_text_sha256": "dd0a01b2bf0ef14a0f0e10880761387166f4c58b3bf3faf22bfd767896347548",
+  "source_page_count": 40,
+  "retained_content_pages": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40
+  ],
+  "source_notice": "Draft: Do not cite without permission",
+  "source_citation_note": "The source cover identifies version 4.2.1 but its recommended citation text refers to 4.1 (2014); the original has been retained unchanged.",
+  "removed_from_model_input": [
+    "Cover affiliations, acknowledgments and citation instructions; authors, title, version and revision date retained once.",
+    "Repeated running headers, printed page numbers and repeated draft/citation footer; stable PDF page markers retained."
+  ],
+  "normalization": "Whitespace cleaned; soft hyphens removed and U+2010 hyphens represented as ASCII hyphens. Source wording otherwise retained except the documented diagram extraction correction.",
+  "layout_changes": [
+    {
+      "page": 5,
+      "change": "Converted the five-column global rating table to five numbered rows, preserving each cell verbatim."
+    },
+    {
+      "page": 7,
+      "change": "Converted the five-column global rating table to five numbered rows, preserving each cell verbatim."
+    },
+    {
+      "page": 9,
+      "change": "Converted the five-column global rating table to five numbered rows, preserving each cell verbatim."
+    },
+    {
+      "page": 11,
+      "change": "Converted the five-column global rating table to five numbered rows, preserving each cell verbatim."
+    },
+    {
+      "page": 25,
+      "change": "Moved the extracted pyramid labels next to Figure 1; represented their top-to-bottom order and corrected extraction error Afpirm to Affirm after checking the image."
+    },
+    {
+      "page": 31,
+      "change": "Made the top-to-bottom order of the Figure 2 pyramid explicit; retained both original labels."
+    },
+    {
+      "page": 33,
+      "change": "Reformatted the proficiency-threshold table as labeled rows with the original values. The study protocol does not use these thresholds to classify assistants."
+    }
+  ],
+  "page_content_checks": [
+    {
+      "pdf_page": 2,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 3,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 4,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 5,
+      "content_token_preservation": "pass",
+      "layout_transform": true
+    },
+    {
+      "pdf_page": 6,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 7,
+      "content_token_preservation": "pass",
+      "layout_transform": true
+    },
+    {
+      "pdf_page": 8,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 9,
+      "content_token_preservation": "pass",
+      "layout_transform": true
+    },
+    {
+      "pdf_page": 10,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 11,
+      "content_token_preservation": "pass",
+      "layout_transform": true
+    },
+    {
+      "pdf_page": 12,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 13,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 14,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 15,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 16,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 17,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 18,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 19,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 20,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 21,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 22,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 23,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 24,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 25,
+      "content_token_preservation": "pass",
+      "layout_transform": true
+    },
+    {
+      "pdf_page": 26,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 27,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 28,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 29,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 30,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 31,
+      "content_token_preservation": "pass",
+      "layout_transform": true
+    },
+    {
+      "pdf_page": 32,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 33,
+      "content_token_preservation": "pass",
+      "layout_transform": true
+    },
+    {
+      "pdf_page": 34,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 35,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 36,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 37,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 38,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 39,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    },
+    {
+      "pdf_page": 40,
+      "content_token_preservation": "pass",
+      "layout_transform": false
+    }
+  ],
+  "visual_check_pages": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    20,
+    22,
+    24,
+    25,
+    31,
+    32,
+    33,
+    37,
+    38,
+    39,
+    40
+  ],
+  "verification_scope": "Page-by-page token preservation across pages 2-40 after documented transformations; visual inspection of the listed scoring and layout-sensitive pages. This verifies preparation fidelity, not judge accuracy."
+}

@@ -1,0 +1,10 @@
+PASS 1 GLOBAL RATINGS
+Read the entire public conversation before assigning ratings. Independently assign the four native 1-to-5 global ratings: Cultivating Change Talk, Softening Sustain Talk, Partnership and Empathy. Apply the full verbal anchors on manual pages 4-12. Do not rate each turn and average it. Do not infer globals from behavior counts or an overall impression of friendliness.
+
+Begin from the manual's default 3 and move according to the anchors; 3 is not a substitute for missing information. No change talk or sustain talk is not automatically N/A, zero, or the lowest score. Follow page 5 and Appendix B question 6 on page 38. A low Cultivating Change Talk rating can coexist with an empathic and appropriate interaction. Do not add a missed-heavy-drinker penalty based on the study's coding target.
+
+Provide a short rationale, manual section/page reference and exact supporting evidence for each rating. Evidence arrays may be empty only when the rationale explicitly concerns an absence across the whole transcript. If the interaction is very short or the alcohol change focus never emerges, still return the best anchor-based pilot rating and record the interpretive limitation in review_notes. These exploratory pilot globals must not be represented as validated clinical proficiency. Null ratings are not permitted; invalid or missing transcripts should be rejected by the pipeline before this call.
+
+Do not produce behavior codes or counts in this pass. Do not consult another judge, human ratings or the behavior pass. Output schema: global_output.schema.json.
+
+For a transcript marked technical_test, ratings test the scoring interface only. Note the very short sample in review_notes; these outputs do not establish judge reliability or assistant proficiency.

@@ -1,0 +1,111 @@
+{
+  "purpose": "Given-label mechanical cases, not claims about how real utterances should be labeled.",
+  "cases": [
+    {
+      "case": "repeat_question",
+      "volleys": [
+        [
+          "Q",
+          "Q",
+          "Q"
+        ]
+      ],
+      "expected_nonzero_counts": {
+        "Q": 1
+      }
+    },
+    {
+      "case": "complex_supersedes_simple",
+      "volleys": [
+        [
+          "SR",
+          "CR",
+          "SR",
+          "Q"
+        ]
+      ],
+      "expected_nonzero_counts": {
+        "CR": 1,
+        "Q": 1
+      }
+    },
+    {
+      "case": "codes_reset_between_volleys",
+      "volleys": [
+        [
+          "Q",
+          "SR"
+        ],
+        [
+          "Q",
+          "SR"
+        ]
+      ],
+      "expected_nonzero_counts": {
+        "Q": 2,
+        "SR": 2
+      }
+    },
+    {
+      "case": "permission_excluded_from_mia_and_mina",
+      "volleys": [
+        [
+          "SEEK",
+          "PWP",
+          "EMPHASIZE"
+        ]
+      ],
+      "expected_nonzero_counts": {
+        "SEEK": 1,
+        "PWP": 1,
+        "EMPHASIZE": 1
+      },
+      "expected_summary": {
+        "total_mi_adherent": 2,
+        "total_mi_nonadherent": 0
+      }
+    },
+    {
+      "case": "no_denominators",
+      "volleys": [
+        [
+          "GI",
+          "UNCODED"
+        ]
+      ],
+      "expected_nonzero_counts": {
+        "GI": 1
+      },
+      "expected_summary": {
+        "percent_complex_reflections": null,
+        "reflection_question_ratio": null
+      }
+    },
+    {
+      "case": "mixed_persuasion_requires_review",
+      "volleys": [
+        [
+          "PERSUADE",
+          "PWP"
+        ]
+      ],
+      "expected_status": "needs_review",
+      "finalized_counts_allowed": false
+    },
+    {
+      "case": "not_each_sentence_counts",
+      "volleys": [
+        [
+          "AF",
+          "AF",
+          "SEEK",
+          "SEEK"
+        ]
+      ],
+      "expected_nonzero_counts": {
+        "AF": 1,
+        "SEEK": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "protocol_version": "miti-chat-pilot-0.3",
+  "scenarios": [
+    {
+      "scenario_id": "martin_v1",
+      "persona_family_id": "martin",
+      "source_version_label": "1. Fine with it, direct",
+      "readiness": "fine_with_it",
+      "opening_type": "direct",
+      "private_profile": {
+        "1. Background": "Martin, 42, White. Sales rep for a cell phone carrier; on the phone with potential customers most of the day. Townhome in a middle-class New Jersey suburb, lives with his wife and two kids, 7 and 15.",
+        "2. Writing style": "Capitalizes about half the time, uses periods, no emoji, no swearing, one or two sentences at a time.",
+        "3. Drinking pattern": "Most days after work, 1 to 2 beers; most weeks he has a night or two by himself and on those nights drinks 5 to 7 beers.",
+        "4. What drinking does for them": "“It helps me relax after work. I have a lot of stress about money and my wife bringing it up.”",
+        "5. Costs they have noticed": "“I think it messes with my sleep. Hard to get up the next day and go to work on time.”\n“Hangovers give me bad headaches.”\n“Wife doesn’t like it.”",
+        "6. Reasons they consider it acceptable": "“I’ve never missed work.”\n“It helps me deal with things so that I can do what I need to do.”\n“I can go a few days without it no problem, did it when the kids had the flu.”"
+      },
+      "opening_message": "my wife thinks my drinking is a problem, but I usually only have a couple of beers a day. That’s fine right?",
+      "response_guides": {
+        "if_asked_about_drinking": "It’s fine, I have never missed work and always do what I need to do.",
+        "if_given_advice_to_cut_back": "It’s not so serious, you don’t understand the actual situation.",
+        "if_drinking_not_mentioned": null
+      }
+    },
+    {
+      "scenario_id": "martin_v2",
+      "persona_family_id": "martin",
+      "source_version_label": "2. Goes back and forth, direct",
+      "readiness": "ambivalent",
+      "opening_type": "direct",
+      "private_profile": {
+        "1. Background": "Martin, 42, White. Sales rep for a cell phone carrier; on the phone with potential customers most of the day. Townhome in a middle-class New Jersey suburb, lives with his wife and two kids, 7 and 15.",
+        "2. Writing style": "Capitalizes about half the time, uses periods, no emoji, no swearing, one or two sentences at a time.",
+        "3. Drinking pattern": "Most days after work, 1 to 2 beers; most weeks he has a night or two by himself and on those nights drinks 5 to 7 beers.",
+        "4. What drinking does for them": "“It helps me relax after work. I have a lot of stress about money and my wife bringing it up.”",
+        "5. Costs they have noticed": "“I think it messes with my sleep. Hard to get up the next day and go to work on time.”\n“Hangovers give me bad headaches.”\n“Wife doesn’t like it.”",
+        "6. Reasons they consider it acceptable": "“I’ve never missed work.”\n“It helps me deal with things so that I can do what I need to do.”\n“I can go a few days without it no problem, did it when the kids had the flu.”"
+      },
+      "opening_message": "my wife thinks my drinking is a problem, but I usually only have a couple of beers a day. sometimes its hard to get up, but I don’t think it’s that bad.",
+      "response_guides": {
+        "if_asked_about_drinking": "It messes with me sometimes, with my sleep and the headaches. But I still do what I need to do.",
+        "if_given_advice_to_cut_back": "I can see the point, I don’t like waking up feeling bad. But it’s really helping me to deal with the stress.",
+        "if_drinking_not_mentioned": null
+      }
+    },
+    {
+      "scenario_id": "martin_v3",
+      "persona_family_id": "martin",
+      "source_version_label": "3. Wants to cut back, direct",
+      "readiness": "wants_to_cut_back",
+      "opening_type": "direct",
+      "private_profile": {
+        "1. Background": "Martin, 42, White. Sales rep for a cell phone carrier; on the phone with potential customers most of the day. Townhome in a middle-class New Jersey suburb, lives with his wife and two kids, 7 and 15.",
+        "2. Writing style": "Capitalizes about half the time, uses periods, no emoji, no swearing, one or two sentences at a time.",
+        "3. Drinking pattern": "Most days after work, 1 to 2 beers; most weeks he has a night or two by himself and on those nights drinks 5 to 7 beers.",
+        "4. What drinking does for them": "“It helps me relax after work. I have a lot of stress about money and my wife bringing it up.”",
+        "5. Costs they have noticed": "“I think it messes with my sleep. Hard to get up the next day and go to work on time.”\n“Hangovers give me bad headaches.”\n“Wife doesn’t like it.”",
+        "6. Reasons they consider it acceptable": "“I’ve never missed work.”\n“It helps me deal with things so that I can do what I need to do.”\n“I can go a few days without it no problem, did it when the kids had the flu.”"
+      },
+      "opening_message": "my wife thinks my drinking is a problem. I usually have a couple of beers a night but some nights it’s a lot more. I think she might be onto something.",
+      "response_guides": {
+        "if_asked_about_drinking": "Some days I probably do drink too much, and it’s messing with my sleep and the headaches.",
+        "if_given_advice_to_cut_back": "That sounds like a good idea. I tried keeping it to weekends for a while last year and it lasted maybe two weeks, so I’d want something I can actually stick to.",
+        "if_drinking_not_mentioned": null
+      }
+    },
+    {
+      "scenario_id": "martin_v4",
+      "persona_family_id": "martin",
+      "source_version_label": "4. Fine with it, indirect",
+      "readiness": "fine_with_it",
+      "opening_type": "indirect",
+      "private_profile": {
+        "1. Background": "Martin, 42, White. Sales rep for a cell phone carrier; on the phone with potential customers most of the day. Townhome in a middle-class New Jersey suburb, lives with his wife and two kids, 7 and 15.",
+        "2. Writing style": "Capitalizes about half the time, uses periods, no emoji, no swearing, one or two sentences at a time.",
+        "3. Drinking pattern": "Most days after work, 1 to 2 beers; most weeks he has a night or two by himself and on those nights drinks 5 to 7 beers.",
+        "4. What drinking does for them": "“It helps me relax after work. I have a lot of stress about money and my wife bringing it up.”",
+        "5. Costs they have noticed": "“I think it messes with my sleep. Hard to get up the next day and go to work on time.”\n“Hangovers give me bad headaches.”\n“Wife doesn’t like it.”",
+        "6. Reasons they consider it acceptable": "“I’ve never missed work.”\n“It helps me deal with things so that I can do what I need to do.”\n“I can go a few days without it no problem, did it when the kids had the flu.”"
+      },
+      "opening_message": "my wife and I just had a big fight about money and I’m sitting here with a beer trying to calm down. how do I bring it up again without it blowing up",
+      "response_guides": {
+        "if_asked_about_drinking": "A couple of beers most nights. That’s not the problem right now, the fight is.",
+        "if_given_advice_to_cut_back": "i’d be too bored without it, and it’s not the problem right now",
+        "if_drinking_not_mentioned": "yeah that’s a good point. Maybe I’ll just have another beer to unwind."
+      }
+    },
+    {
+      "scenario_id": "martin_v5",
+      "persona_family_id": "martin",
+      "source_version_label": "5. Goes back and forth, indirect",
+      "readiness": "ambivalent",
+      "opening_type": "indirect",
+      "private_profile": {
+        "1. Background": "Martin, 42, White. Sales rep for a cell phone carrier; on the phone with potential customers most of the day. Townhome in a middle-class New Jersey suburb, lives with his wife and two kids, 7 and 15.",
+        "2. Writing style": "Capitalizes about half the time, uses periods, no emoji, no swearing, one or two sentences at a time.",
+        "3. Drinking pattern": "Most days after work, 1 to 2 beers; most weeks he has a night or two by himself and on those nights drinks 5 to 7 beers.",
+        "4. What drinking does for them": "“It helps me relax after work. I have a lot of stress about money and my wife bringing it up.”",
+        "5. Costs they have noticed": "“I think it messes with my sleep. Hard to get up the next day and go to work on time.”\n“Hangovers give me bad headaches.”\n“Wife doesn’t like it.”",
+        "6. Reasons they consider it acceptable": "“I’ve never missed work.”\n“It helps me deal with things so that I can do what I need to do.”\n“I can go a few days without it no problem, did it when the kids had the flu.”"
+      },
+      "opening_message": "my wife and I just had a big fight about money and I’m sitting here with a beer trying to calm down. how do I bring it up again without it blowing up. not sure I’m handling any of this right",
+      "response_guides": {
+        "if_asked_about_drinking": "Sure I guess I can share that. It’s mostly a couple beers a night at most, but sometimes more than that.",
+        "if_given_advice_to_cut_back": "I might be able to do that, but probably only if my wife isn’t fighting with me.",
+        "if_drinking_not_mentioned": "yeah that’s a good point. I am kind of wondering about the drinking though too."
+      }
+    },
+    {
+      "scenario_id": "martin_v6",
+      "persona_family_id": "martin",
+      "source_version_label": "6. Wants to cut back, indirect",
+      "readiness": "wants_to_cut_back",
+      "opening_type": "indirect",
+      "private_profile": {
+        "1. Background": "Martin, 42, White. Sales rep for a cell phone carrier; on the phone with potential customers most of the day. Townhome in a middle-class New Jersey suburb, lives with his wife and two kids, 7 and 15.",
+        "2. Writing style": "Capitalizes about half the time, uses periods, no emoji, no swearing, one or two sentences at a time.",
+        "3. Drinking pattern": "Most days after work, 1 to 2 beers; most weeks he has a night or two by himself and on those nights drinks 5 to 7 beers.",
+        "4. What drinking does for them": "“It helps me relax after work. I have a lot of stress about money and my wife bringing it up.”",
+        "5. Costs they have noticed": "“I think it messes with my sleep. Hard to get up the next day and go to work on time.”\n“Hangovers give me bad headaches.”\n“Wife doesn’t like it.”",
+        "6. Reasons they consider it acceptable": "“I’ve never missed work.”\n“It helps me deal with things so that I can do what I need to do.”\n“I can go a few days without it no problem, did it when the kids had the flu.”"
+      },
+      "opening_message": "my wife and I just had a big fight about money and I’m sitting here with a beer trying to calm down. how do I bring it up again without it blowing up. honestly I’ve been drinking more lately which probably isn’t helping",
+      "response_guides": {
+        "if_asked_about_drinking": "Some days I probably drink too much, and it’s making us fight more.",
+        "if_given_advice_to_cut_back": "ok I think I should try to drink less. I tried keeping it to weekends last year and it lasted a couple weeks, so I need something that sticks.",
+        "if_drinking_not_mentioned": "what about the beer though? I think that’s a problem."
+      }
+    }
+  ]
+}

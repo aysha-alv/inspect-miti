@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "behavior_output",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "protocol_version": {
+      "const": "miti-chat-pilot-0.3"
+    },
+    "transcript_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "ok",
+        "needs_review"
+      ]
+    },
+    "volleys": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "volley_id": {
+            "type": "string"
+          },
+          "assistant_message_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "intervening_facilitative_user_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 0
+          },
+          "boundary_note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "volley_id",
+          "assistant_message_ids",
+          "intervening_facilitative_user_ids",
+          "boundary_note"
+        ]
+      },
+      "minItems": 1
+    },
+    "utterances": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "utterance_id": {
+            "type": "string"
+          },
+          "volley_id": {
+            "type": "string"
+          },
+          "message_id": {
+            "type": "string"
+          },
+          "quote": {
+            "type": "string",
+            "minLength": 1
+          },
+          "occurrence_index": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "code": {
+            "enum": [
+              "GI",
+              "PERSUADE",
+              "PWP",
+              "Q",
+              "SR",
+              "CR",
+              "AF",
+              "SEEK",
+              "EMPHASIZE",
+              "CONFRONT",
+              "UNCODED"
+            ]
+          },
+          "rationale": {
+            "type": "string"
+          },
+          "manual_reference": {
+            "type": "string"
+          },
+          "review_note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "utterance_id",
+          "volley_id",
+          "message_id",
+          "quote",
+          "occurrence_index",
+          "code",
+          "rationale",
+          "manual_reference",
+          "review_note"
+        ]
+      },
+      "minItems": 1
+    },
+    "review_notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 0
+    }
+  },
+  "required": [
+    "protocol_version",
+    "transcript_id",
+    "status",
+    "volleys",
+    "utterances",
+    "review_notes"
+  ]
+}

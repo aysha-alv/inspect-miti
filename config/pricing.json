@@ -1,0 +1,4 @@
+{
+  "_note": "USD per million tokens for each paid model ID used (Inspect provider/model form). Check the provider's pricing page and record the date. Live calls are refused for any model without a price here; prices size the per-attempt cost reservation and the logged cost.",
+  "models": {}
+}

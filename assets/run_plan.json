@@ -1,0 +1,107 @@
+{
+  "protocol_version": "miti-chat-pilot-0.3",
+  "mode": "offline",
+  "allow_paid_calls": false,
+  "approved_batch_id": null,
+  "approved_max_cost_usd": null,
+  "approved_max_total_requests": null,
+  "model_ids": {
+    "target_openai": null,
+    "target_anthropic": null,
+    "client_provisional": null,
+    "judge_provisional": null
+  },
+  "persona_files": [
+    "assets/first_persona_versions.json"
+  ],
+  "generation": {
+    "max_assistant_replies": 4,
+    "max_generated_client_followups": 3,
+    "stop_rule": "End immediately after the fourth target assistant reply. The fixed opening is the first user message, so a completed test contains eight public messages. Do not generate a fifth user message.",
+    "early_stop_rule": "End early for an unrecoverable request failure, an empty or truncated response, an operator cancellation, or a spending/request limit. Save the partial dialogue, raw response and reason. For this technical batch, a farewell or refusal does not trigger an automatic stop or regeneration; use the reply cap when responses remain available.",
+    "target_system_file": "assets/target_system.txt",
+    "client_system_file": "assets/client_system.txt",
+    "tools_enabled": false,
+    "memory_enabled": false,
+    "rollback_enabled": false,
+    "prefill_enabled": false,
+    "automatic_content_retry_enabled": false,
+    "sampling": "Provider defaults initially. Record requested and effective settings, including any supported seed; mark unsupported or unavailable values explicitly.",
+    "response_token_limits": {
+      "target": null,
+      "client": null,
+      "judge_globals": null,
+      "judge_behaviors": null
+    },
+    "response_token_limits_note": "Aysha proposes explicit per-role token limits for review before live access. These protect cost and completion, not a speech-duration target. Log any truncation; do not instruct the target to be unusually brief or long.",
+    "record_lengths": [
+      "message_count_by_speaker",
+      "word_count_by_speaker",
+      "word_count_each_message",
+      "assistant_reply_count",
+      "provider_token_usage",
+      "stop_reason"
+    ],
+    "word_count_rule": "Count whitespace-separated units in the unchanged public message. Use this same descriptive counting rule for every model; do not convert it to minutes.",
+    "final_study_assistant_reply_limit": null,
+    "client_call_format": "Fresh system-plus-user request for each follow-up. The system contains the client instructions and selected private persona; the user payload contains generated_followup_index and the public message array. See README for assembly."
+  },
+  "judging": {
+    "passes": [
+      "globals",
+      "behaviors"
+    ],
+    "independent_contexts": true,
+    "manual_text_file": "reference/MITI_4_2_1_for_judge.txt",
+    "common_prompt_file": "assets/judge_common.txt",
+    "global_prompt_file": "assets/judge_globals.txt",
+    "behavior_prompt_file": "assets/judge_behaviors.txt",
+    "global_schema_file": "assets/global_output.schema.json",
+    "behavior_schema_file": "assets/behavior_output.schema.json",
+    "automatic_json_repair_calls": 0,
+    "preserve_original_outputs": true,
+    "transcript_stage_for_first_batch": "technical_test",
+    "input_transcripts": "For this technical batch, judge only conversations that reached the reply cap without an incomplete response. Record a skipped status for other transcripts.",
+    "structured_output_mode": "prompt_json",
+    "structured_output_note": "Use JSON instructions and the supplied schema in the prompt, with local validation. Provider-native constrained output is disabled for this technical batch; any later change is a recorded judge configuration change."
+  },
+  "proposed_first_live_batch_not_authorized": {
+    "batch_id": "technical_check_01",
+    "conversation_count": 2,
+    "items": [
+      {
+        "scenario_id": "martin_v2",
+        "target_role": "target_openai"
+      },
+      {
+        "scenario_id": "martin_v5",
+        "target_role": "target_anthropic"
+      }
+    ],
+    "client_role": "client_provisional",
+    "judge_role": "judge_provisional",
+    "max_nominal_api_requests": 18,
+    "nominal_request_breakdown": {
+      "target": 8,
+      "client": 6,
+      "judge": 4
+    },
+    "purpose": "Check message exchange, stopping, storage and MITI output formats. Not judge validation or a target-model comparison.",
+    "max_attempts_if_each_request_retries_once": 36
+  },
+  "later_work_not_authorized": {
+    "client_screen": "Proposed six conversations: the three indirect versions with each of two client candidates and one fixed target. The team sets models, length and budget after the technical check.",
+    "judge_validation": "The team sets the validation length, additional personas, judge candidates and human-coding plan before generating validation data."
+  },
+  "review_gate": "Aysha sends code, setup instructions, configuration and prompts, proposed model IDs and settings, and a cost estimate to Shaddy. Shaddy approves the named batch before model API calls.",
+  "execution": {
+    "concurrency": 1,
+    "transport_retries_max": 1,
+    "attempt_timeout_seconds": 120,
+    "request_timeout_seconds": 300,
+    "retry_scope": "All client, target and judge calls. Retry only transient transport, rate-limit or server errors; at most two attempts per logical request. Configure Inspect and the provider SDK so nested retries cannot exceed this total.",
+    "request_cap_unit": "Every provider attempt, including retries.",
+    "budget_rule": "Before each attempt, reserve a conservative cost bound from the complete input and output/reasoning limits. Stop before exceeding the approved request or dollar limit; log uncertain charges from timed-out attempts conservatively.",
+    "live_access_gate": "Before every paid provider attempt, refuse unless mode equals live, allow_paid_calls is true, approved_batch_id is nonempty and equals the running batch ID, every model role used by that batch has a nonempty model ID (all four model_ids entries for technical_check_01), approved_max_cost_usd is a finite positive number, and approved_max_total_requests is a positive integer. The request cap counts provider attempts, including retries; continue to apply budget_rule."
+  }
+}

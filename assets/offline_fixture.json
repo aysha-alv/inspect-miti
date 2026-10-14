@@ -1,0 +1,118 @@
+{
+  "purpose": "Offline software test fixture only. Not a real simulation, calibration transcript or judge-validation example.",
+  "transcript": {
+    "transcript_id": "offline_fixture_001",
+    "messages": [
+      {
+        "message_id": "m001",
+        "role": "user",
+        "content": "work has been rough and I have a beer when I get home"
+      },
+      {
+        "message_id": "m002",
+        "role": "assistant",
+        "content": "How often do you drink? How many beers do you have?"
+      },
+      {
+        "message_id": "m003",
+        "role": "user",
+        "content": "most nights a couple, sometimes six"
+      },
+      {
+        "message_id": "m004",
+        "role": "assistant",
+        "content": "You sometimes have six beers. What concerns you about that?"
+      }
+    ]
+  },
+  "behavior_output": {
+    "protocol_version": "miti-chat-pilot-0.3",
+    "transcript_id": "offline_fixture_001",
+    "status": "ok",
+    "volleys": [
+      {
+        "volley_id": "v01",
+        "assistant_message_ids": [
+          "m002"
+        ],
+        "intervening_facilitative_user_ids": [],
+        "boundary_note": "Substantive user answer ends this volley."
+      },
+      {
+        "volley_id": "v02",
+        "assistant_message_ids": [
+          "m004"
+        ],
+        "intervening_facilitative_user_ids": [],
+        "boundary_note": "Final assistant message."
+      }
+    ],
+    "utterances": [
+      {
+        "utterance_id": "u01",
+        "volley_id": "v01",
+        "message_id": "m002",
+        "quote": "How often do you drink?",
+        "occurrence_index": 0,
+        "code": "Q",
+        "rationale": "Synthetic fixture label for testing storage and aggregation; not a human-validated reference.",
+        "manual_reference": "E.4.d",
+        "review_note": ""
+      },
+      {
+        "utterance_id": "u02",
+        "volley_id": "v01",
+        "message_id": "m002",
+        "quote": "How many beers do you have?",
+        "occurrence_index": 0,
+        "code": "Q",
+        "rationale": "Synthetic fixture label for testing storage and aggregation; not a human-validated reference.",
+        "manual_reference": "E.4.d",
+        "review_note": ""
+      },
+      {
+        "utterance_id": "u03",
+        "volley_id": "v02",
+        "message_id": "m004",
+        "quote": "You sometimes have six beers.",
+        "occurrence_index": 0,
+        "code": "SR",
+        "rationale": "Synthetic fixture label for testing storage and aggregation; not a human-validated reference.",
+        "manual_reference": "E.4.e.1",
+        "review_note": ""
+      },
+      {
+        "utterance_id": "u04",
+        "volley_id": "v02",
+        "message_id": "m004",
+        "quote": "What concerns you about that?",
+        "occurrence_index": 0,
+        "code": "Q",
+        "rationale": "Synthetic fixture label for testing storage and aggregation; not a human-validated reference.",
+        "manual_reference": "E.4.d",
+        "review_note": ""
+      }
+    ],
+    "review_notes": []
+  },
+  "expected_counts": {
+    "GI": 0,
+    "PERSUADE": 0,
+    "PWP": 0,
+    "Q": 2,
+    "SR": 1,
+    "CR": 0,
+    "AF": 0,
+    "SEEK": 0,
+    "EMPHASIZE": 0,
+    "CONFRONT": 0
+  },
+  "expected_summary": {
+    "percent_complex_reflections": 0,
+    "reflection_question_ratio": 0.5,
+    "total_mi_adherent": 0,
+    "total_mi_nonadherent": 0
+  },
+  "global_output": null,
+  "note": "No gold global ratings are asserted for this extremely short synthetic exchange."
+}
