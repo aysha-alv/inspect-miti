@@ -1,4 +1,23 @@
 {
   "_note": "USD per million tokens for each paid model ID used (Inspect provider/model form). Check the provider's pricing page and record the date. Live calls are refused for any model without a price here; prices size the per-attempt cost reservation and the logged cost.",
-  "models": {}
+  "models": {
+    "openai/gpt-6.1-sol": {
+      "input_usd_per_mtok": 2.0,
+      "output_usd_per_mtok": 10.0,
+      "source": "developers.openai.com/api/docs/models/gpt-6.1-sol (Standard, <=272K input)",
+      "checked": "2026-10-21"
+    },
+    "anthropic/claude-sonnet-5-5": {
+      "input_usd_per_mtok": 2.0,
+      "output_usd_per_mtok": 10.0,
+      "source": "platform.claude.com/docs/en/about-claude/pricing",
+      "checked": "2026-10-21"
+    },
+    "anthropic/claude-opus-5-5": {
+      "input_usd_per_mtok": 4.0,
+      "output_usd_per_mtok": 20.0,
+      "source": "platform.claude.com/docs/en/about-claude/pricing",
+      "checked": "2026-10-21"
+    }
+  }
 }

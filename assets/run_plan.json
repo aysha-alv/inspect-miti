@@ -1,15 +1,15 @@
 {
   "protocol_version": "miti-chat-pilot-0.3",
-  "mode": "offline",
-  "allow_paid_calls": false,
-  "approved_batch_id": null,
-  "approved_max_cost_usd": null,
-  "approved_max_total_requests": null,
+  "mode": "live",
+  "allow_paid_calls": true,
+  "approved_batch_id": "technical_check_01",
+  "approved_max_cost_usd": 5.0,
+  "approved_max_total_requests": 36,
   "model_ids": {
-    "target_openai": null,
-    "target_anthropic": null,
-    "client_provisional": null,
-    "judge_provisional": null
+    "target_openai": "openai/gpt-6.1-sol",
+    "target_anthropic": "anthropic/claude-sonnet-5-5",
+    "client_provisional": "anthropic/claude-sonnet-5-5",
+    "judge_provisional": "anthropic/claude-opus-5-5"
   },
   "persona_files": [
     "assets/first_persona_versions.json"
@@ -28,10 +28,10 @@
     "automatic_content_retry_enabled": false,
     "sampling": "Provider defaults initially. Record requested and effective settings, including any supported seed; mark unsupported or unavailable values explicitly.",
     "response_token_limits": {
-      "target": null,
-      "client": null,
-      "judge_globals": null,
-      "judge_behaviors": null
+      "target": 16000,
+      "client": 1000,
+      "judge_globals": 8000,
+      "judge_behaviors": 16000
     },
     "response_token_limits_note": "Aysha proposes explicit per-role token limits for review before live access. These protect cost and completion, not a speech-duration target. Log any truncation; do not instruct the target to be unusually brief or long.",
     "record_lengths": [
