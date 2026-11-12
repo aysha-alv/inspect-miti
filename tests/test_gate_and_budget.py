@@ -3,14 +3,12 @@ and allowed attempts are recorded but not sent."""
 
 import pytest
 
+from conftest import LIVE_MODELS as MODELS
 from conftest import live_plan
 from miti_chat.budget import AccessRefused, Ledger, live_gate_problems
 
-MODELS = {"target_openai": "openai/gpt-x", "target_anthropic": "anthropic/claude-x",
-          "client_provisional": "anthropic/claude-x", "judge_provisional": "anthropic/claude-x"}
 
-
-def _reserve(ledger, model="anthropic/claude-x", inp=1000, out=1000):
+def _reserve(ledger, model="anthropic/claude-opus-5-5", inp=1000, out=1000):
     return ledger.reserve(role="target", model=model, purpose="t", request_id="r", attempt_number=1,
                           est_input_tokens=inp, max_output_tokens=out, settings={})
 
@@ -51,10 +49,10 @@ def test_each_gate_condition(protocol, change, expect):
 def test_missing_model_id_and_price(protocol):
     live_plan(protocol, MODELS)
     protocol.plan["model_ids"]["client_provisional"] = None
-    protocol.__dict__["pricing"].pop("openai/gpt-x")
+    protocol.__dict__["pricing"].pop("openai/gpt-6.1-sol")
     problems = live_gate_problems(protocol, protocol.batch("technical_check_01"))
     assert "model_ids.client_provisional is empty" in problems
-    assert any("openai/gpt-x: no price" in p for p in problems)
+    assert any("openai/gpt-6.1-sol: no price" in p for p in problems)
 
 
 def test_unverified_provider_refused(protocol):
@@ -86,3 +84,31 @@ def test_cost_cap_uses_reservations(protocol, tmp_path):
     with pytest.raises(AccessRefused) as ex:
         _reserve(ledger, inp=1000, out=2000)
     assert ex.value.code == "cost_limit_reached"
+
+
+def test_reasoning_effort_required_and_supported(protocol):
+    live_plan(protocol)
+    batch = protocol.batch("technical_check_01")
+    assert live_gate_problems(protocol, batch) == []
+    protocol.plan["generation"]["reasoning_effort"].pop("client_provisional")
+    assert "generation.reasoning_effort.client_provisional is not set" in live_gate_problems(protocol, batch)
+    protocol.plan["generation"]["reasoning_effort"]["client_provisional"] = "extreme"
+    assert any("not one of" in p for p in live_gate_problems(protocol, batch))
+
+
+def test_reasoning_not_supported_by_model_is_refused(protocol):
+    live_plan(protocol, {**MODELS, "target_openai": "openai/gpt-4o"})  # not a reasoning model
+    protocol.__dict__["pricing"]["openai/gpt-4o"] = {"input_usd_per_mtok": 1, "output_usd_per_mtok": 1}
+    problems = live_gate_problems(protocol, protocol.batch("technical_check_01"))
+    assert any("openai/gpt-4o" in p and "effort would be ignored" in p for p in problems)
+
+
+def test_saved_plan_matches_approved_batch():
+    """The committed run plan is set up for exactly the batch Shaddy approved, with explicit reasoning."""
+    from miti_chat.config import Protocol
+    p = Protocol()
+    batch = p.batch(p.plan["approved_batch_id"]) if p.plan.get("approved_batch_id") else None
+    if p.plan.get("mode") == "live":
+        assert batch is not None
+        assert all(p.reasoning_effort(r) for r in batch.roles)
+        assert p.plan["approved_max_total_requests"] == batch.raw["max_attempts_if_each_request_retries_once"]

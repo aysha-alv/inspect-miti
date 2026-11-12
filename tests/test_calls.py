@@ -28,7 +28,6 @@ def _ok():
 
 
 def test_attempt_timeout_is_retried_once(protocol, tmp_path, monkeypatch):
-    monkeypatch.setattr("miti_chat.calls.RETRY_WAIT_SECONDS", 0)
     calls = []
 
     def flaky(*args):
@@ -43,7 +42,6 @@ def test_attempt_timeout_is_retried_once(protocol, tmp_path, monkeypatch):
 
 
 def test_at_most_two_attempts(protocol, tmp_path, monkeypatch):
-    monkeypatch.setattr("miti_chat.calls.RETRY_WAIT_SECONDS", 0)
 
     def always_timeout(*args):
         raise AttemptTimeoutError("attempt timed out")
@@ -63,5 +61,7 @@ def test_non_transient_error_not_retried(protocol, tmp_path):
 def test_requested_settings_recorded(protocol, tmp_path):
     result, ledger = _run(protocol, tmp_path, lambda *a: _ok())
     s = ledger.attempts[0]["requested_settings"]
-    assert s["max_retries"] == 0 and s["attempt_timeout"] == 120 and s["timeout"] == 300
+    ex = protocol.execution
+    assert s["max_retries"] == 0 and s["attempt_timeout"] == ex["attempt_timeout_seconds"]
+    assert s["timeout"] == ex["request_timeout_seconds"]
     assert s["max_tokens"] == 50 and s["cache_prompt"] is False

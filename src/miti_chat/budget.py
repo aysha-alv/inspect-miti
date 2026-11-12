@@ -68,11 +68,14 @@ def _positive_int(x: Any) -> bool:
 def live_gate_problems(protocol: Protocol, batch: Batch, model_ids: list[str] | None = None) -> list[str]:
     """Unmet conditions for paid calls in this batch (empty list = live access allowed).
 
-    These are the run plan's live_access_gate conditions, plus three this code
+    These are the run plan's live_access_gate conditions, plus four this code
     needs to keep its promises: per-role response token limits (for the cost
-    bound), a price for every paid model, and a provider whose SDK retries can
-    be disabled.
+    bound), a price for every paid model, a provider whose SDK retries can be
+    disabled, and an explicit reasoning effort per role that Inspect will
+    actually send to that model.
     """
+    from .reasoning import support_problem
+
     plan = protocol.plan
     problems: list[str] = []
     if plan.get("mode") != "live":
@@ -103,7 +106,19 @@ def live_gate_problems(protocol: Protocol, batch: Batch, model_ids: list[str] | 
         price = protocol.pricing.get(m) or {}
         if not (_positive_number(price.get("input_usd_per_mtok")) and _positive_number(price.get("output_usd_per_mtok"))):
             problems.append(f"{m}: no price in {protocol.pricing_file}")
-    return problems
+    role_models = {protocol.model_ids.get(r): r for r in batch.roles if protocol.model_ids.get(r)}
+    for role in batch.roles:
+        effort = protocol.reasoning_effort(role)
+        model = protocol.model_ids.get(role)
+        if not effort:
+            problems.append(f"generation.reasoning_effort.{role} is not set")
+        elif model and (p := support_problem(model, effort)):
+            problems.append(p)
+    for m in dict.fromkeys(model_ids or []):  # e.g. judge models passed on the command line
+        if m not in role_models and not is_free(m):
+            if p := support_problem(m, protocol.reasoning_effort(batch.judge_role)):
+                problems.append(p)
+    return list(dict.fromkeys(problems))
 
 
 def attempt_cost(protocol: Protocol, model_id: str, input_tokens: float, output_tokens: float) -> float:

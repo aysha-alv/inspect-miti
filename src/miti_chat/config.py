@@ -33,6 +33,8 @@ class Batch:
     items: tuple[BatchItem, ...]
     client_role: str
     judge_role: str
+    max_assistant_replies: int
+    max_generated_client_followups: int
     raw: dict[str, Any] = field(repr=False)
 
     @property
@@ -86,6 +88,10 @@ class Protocol:
     def token_limit(self, key: str) -> int | None:
         """Response token limit for 'target', 'client', 'judge_globals' or 'judge_behaviors'."""
         return self.generation["response_token_limits"].get(key)
+
+    def reasoning_effort(self, role: str) -> str | None:
+        """Requested reasoning effort for a model role (e.g. 'target_openai'); None if not set."""
+        return (self.generation.get("reasoning_effort") or {}).get(role)
 
     # ---- prompts -----------------------------------------------------
     @cached_property
@@ -149,6 +155,11 @@ class Protocol:
                     items=items,
                     client_role=value["client_role"],
                     judge_role=value["judge_role"],
+                    # a batch may set its own conversation length; otherwise the generation defaults apply
+                    max_assistant_replies=int(value.get("max_assistant_replies",
+                                                        self.generation["max_assistant_replies"])),
+                    max_generated_client_followups=int(value.get("max_generated_client_followups",
+                                                                 self.generation["max_generated_client_followups"])),
                     raw=value,
                 )
         raise ConfigError(f"no batch with batch_id {batch_id!r} in {self.run_plan_file}")
@@ -171,6 +182,7 @@ class Protocol:
                  g["target_system_file"], g["client_system_file"],
                  j["common_prompt_file"], j["global_prompt_file"], j["behavior_prompt_file"],
                  j["manual_text_file"], j["global_schema_file"], j["behavior_schema_file"]]
-        if (self.root / self.pricing_file).is_file():
-            files.append(self.pricing_file)
+        for optional in (self.pricing_file, "config/client_checks.json"):
+            if (self.root / optional).is_file():
+                files.append(optional)
         return list(dict.fromkeys(files))

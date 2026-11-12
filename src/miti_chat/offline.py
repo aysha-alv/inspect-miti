@@ -13,8 +13,10 @@ from typing import Any
 from inspect_ai.model import ChatMessage, GenerateConfig, ModelOutput, ModelUsage
 
 from .calls import OFFLINE_RESPONDER
+from .config import Protocol
 
 OFFLINE_MODEL = "mockllm/offline"
+PROTOCOL_VERSION = Protocol().version
 
 
 def _system(messages: list[ChatMessage]) -> str:
@@ -30,7 +32,7 @@ def _dialogue(user_text: str) -> tuple[str, list[dict[str, str]]]:
 def _globals(tid: str) -> dict[str, Any]:
     rating = {"score": 3, "rationale": "Offline placeholder; not a coding.", "manual_reference": "D",
               "evidence": []}
-    return {"protocol_version": "miti-chat-pilot-0.3", "transcript_id": tid, "status": "ok",
+    return {"protocol_version": PROTOCOL_VERSION, "transcript_id": tid, "status": "ok",
             "ratings": {k: dict(rating) for k in ("cultivating_change_talk", "softening_sustain_talk",
                                                   "partnership", "empathy")},
             "review_notes": ["Offline dry-run output; not a coding."]}
@@ -50,7 +52,7 @@ def _behaviors(tid: str, messages: list[dict[str, str]]) -> dict[str, Any]:
                            "code": "Q" if quote.endswith("?") else "GI",
                            "rationale": "Offline placeholder; not a coding.", "manual_reference": "E.4",
                            "review_note": ""})
-    return {"protocol_version": "miti-chat-pilot-0.3", "transcript_id": tid, "status": "ok",
+    return {"protocol_version": PROTOCOL_VERSION, "transcript_id": tid, "status": "ok",
             "volleys": volleys, "utterances": utterances, "review_notes": ["Offline dry-run output."]}
 
 

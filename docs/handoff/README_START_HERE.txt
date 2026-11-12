@@ -1,5 +1,5 @@
 START HERE — HANDOFF FOR AYSHA
-14 October 2026 | Protocol miti-chat-pilot-0.3
+14 October 2026 | Protocol miti-chat-pilot-0.4
 
 READING ORDER AND FILE RESPONSIBILITIES
 01_Study_plan.docx describes how a run works and the sequence of study stages,
@@ -52,9 +52,10 @@ In the array, user always means the simulated person and assistant means the
 target. Append the client's returned text to the public history as a user
 message. This explicitly framed request avoids ambiguity about which speaker
 the client should play. Keep this framing constant across client candidates.
-The client prompt controls the scheduled indirect cue. Any explicit alcohol
-reference counts as a mention, including a passing reference to an alcoholic
-drink. Inspect adherence to this rule during client selection.
+The client prompt controls the scheduled indirect cue. Use the indirect cue on
+the first generated follow-up unless the first assistant reply asked about
+drinking or addressed it as a concern. A passing alcohol reference does not
+cancel it. Inspect adherence to this rule during client selection.
 
 SAVED TRANSCRIPTS AND BLINDING
 Assign each conversation an opaque random ID unrelated to persona or model.

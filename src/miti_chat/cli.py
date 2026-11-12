@@ -1,4 +1,4 @@
-"""Command line: miti check | estimate | dry-run | generate | score.
+"""Command line: miti check | estimate | dry-run | generate | score | report.
 
 Generation and scoring are separate commands. Paid calls are refused unless the
 run plan's live-access gate is satisfied for the named batch.
@@ -33,7 +33,8 @@ from .runs import RunPaths, run_id, write_json
 def _eval(protocol: Protocol, task: Any, paths: RunPaths, display: str) -> None:
     concurrency = int(protocol.execution["concurrency"])
     inspect_eval(task, model=None, log_dir=str(paths.inspect_logs), max_samples=concurrency, max_tasks=1,
-                 fail_on_error=False, retry_on_error=0, display=display, log_level="warning")
+                 fail_on_error=False, retry_on_error=0, display=display, log_level="warning",
+                 log_model_api=True)  # keep every request so the sent reasoning settings can be verified
 
 
 def _refuse_if_gated(protocol: Protocol, batch: Batch, model_ids: list[str]) -> None:
@@ -42,6 +43,14 @@ def _refuse_if_gated(protocol: Protocol, batch: Batch, model_ids: list[str]) -> 
         problems = live_gate_problems(protocol, batch, paid)
         if problems:
             sys.exit("Live model calls are not allowed for this batch:\n  - " + "\n  - ".join(problems))
+
+
+def _estimate_or_none(protocol: Protocol, batch: Batch) -> dict[str, Any] | None:
+    try:
+        est = estimate_batch(protocol, batch)
+        return {k: v for k, v in est.items() if k not in ("rows", "typical_rows")}
+    except Exception:
+        return None
 
 
 def run_generation(protocol: Protocol, batch: Batch, paths: RunPaths, overrides: dict[str, str] | None = None,
@@ -54,8 +63,12 @@ def run_generation(protocol: Protocol, batch: Batch, paths: RunPaths, overrides:
     gen_id = run_id("gen")
     write_json(paths.manifests / f"{gen_id}.json", {
         "generation_run_id": gen_id, "batch": batch.raw, "models": models,
+        "max_assistant_replies": batch.max_assistant_replies,
+        "max_generated_client_followups": batch.max_generated_client_followups,
+        "reasoning_effort": {r: protocol.reasoning_effort(r) for r in batch.roles if r != batch.judge_role},
         "token_limits": protocol.generation["response_token_limits"], "execution": protocol.execution,
         "provenance": provenance.record(protocol), "manual_check": provenance.manual_check(protocol),
+        "cost_estimate": _estimate_or_none(protocol, batch),
     })
     _eval(protocol, conversation_task(protocol, batch, paths, models, gen_id), paths, display)
     return gen_id
@@ -63,8 +76,13 @@ def run_generation(protocol: Protocol, batch: Batch, paths: RunPaths, overrides:
 
 def run_scoring(protocol: Protocol, batch: Batch, paths: RunPaths, judges: list[str],
                 transcript_ids: list[str] | None = None, stage: str | None = None,
-                supersedes_run: str | None = None, display: str = "plain") -> str:
-    stage = stage or protocol.judging["transcript_stage_for_first_batch"]
+                supersedes_run: str | None = None, display: str = "plain",
+                passes: list[str] | None = None) -> str:
+    stage = stage or batch.raw.get("stage") or protocol.judging["transcript_stage_for_first_batch"]
+    passes = passes or list(protocol.judging["passes"])
+    unknown = [p for p in passes if p not in protocol.judging["passes"]]
+    if unknown:
+        sys.exit(f"Unknown pass(es) {unknown}; choose from {protocol.judging['passes']}")
     _refuse_if_gated(protocol, batch, judges)
     approved_judge = protocol.model_ids.get(batch.judge_role)
     unapproved = [j for j in judges if not is_free(j) and j != approved_judge]
@@ -73,6 +91,13 @@ def run_scoring(protocol: Protocol, batch: Batch, paths: RunPaths, judges: list[
                  f"(model_ids.{batch.judge_role} = {approved_judge!r})")
     if supersedes_run and not (paths.coding / supersedes_run).is_dir():
         sys.exit(f"--supersedes: no scoring run {supersedes_run!r} in {paths.coding}")
+    if supersedes_run:  # every superseded record must exist before anything is paid for
+        missing_old = [f"{t}/{j}/{p}" for t in (transcript_ids or []) for j in judges for p in passes
+                       if not (output_dir(paths, supersedes_run, j, t) / RECORD_FILES[p]).is_file()]
+        if not transcript_ids:
+            sys.exit("--supersedes needs --transcripts (the records being corrected)")
+        if missing_old:
+            sys.exit(f"--supersedes {supersedes_run}: no earlier record for {missing_old}")
     records = {r["transcript_id"]: r for r in paths.conversation_records()}
     wanted = transcript_ids or sorted(records)
     score_id = run_id("score")
@@ -82,6 +107,9 @@ def run_scoring(protocol: Protocol, batch: Batch, paths: RunPaths, judges: list[
         tpath = paths.transcripts / f"{tid}.json"
         if rec is None or not tpath.is_file():
             skipped[tid] = "transcript not found in this batch"
+        elif rec.get("protocol_version") != protocol.version:
+            skipped[tid] = (f"transcript generated under {rec.get('protocol_version')}; "
+                            f"current protocol is {protocol.version}")
         elif rec["status"] != "completed":
             skipped[tid] = f"conversation not completed (stop_reason: {rec['stop_reason']})"
         elif transcripts.content_hash(transcripts.load(tpath)) != rec["transcript_sha256"]:
@@ -90,19 +118,20 @@ def run_scoring(protocol: Protocol, batch: Batch, paths: RunPaths, judges: list[
             eligible.append(tid)
     for tid, reason in skipped.items():
         for judge in judges:
-            for pass_name in protocol.judging["passes"]:
+            for pass_name in passes:
                 write_json(output_dir(paths, score_id, judge, tid) / RECORD_FILES[pass_name],
                            skipped_record(pass_name, tid, judge, stage, score_id, protocol, reason))
     write_json(paths.manifests / f"{score_id}.json", {
         "scoring_run_id": score_id, "batch_id": batch.batch_id, "judges": judges, "stage": stage,
-        "transcripts": eligible, "skipped": skipped, "supersedes_run": supersedes_run,
+        "transcripts": eligible, "skipped": skipped, "supersedes_run": supersedes_run, "passes": passes,
         "output_mode": protocol.judging["structured_output_mode"],
+        "reasoning_effort": {batch.judge_role: protocol.reasoning_effort(batch.judge_role)},
         "token_limits": protocol.generation["response_token_limits"], "execution": protocol.execution,
         "provenance": provenance.record(protocol), "manual_check": provenance.manual_check(protocol),
     })
     if eligible:
-        _eval(protocol, coding_task(protocol, batch, paths, eligible, judges, score_id, stage, supersedes_run),
-              paths, display)
+        _eval(protocol, coding_task(protocol, batch, paths, eligible, judges, score_id, stage, supersedes_run,
+                                    passes), paths, display)
     write_batch_summary(paths, score_id)
     return score_id
 
@@ -110,6 +139,7 @@ def run_scoring(protocol: Protocol, batch: Batch, paths: RunPaths, judges: list[
 # ---- commands -------------------------------------------------------------
 
 def cmd_check(args: argparse.Namespace) -> int:
+    load_dotenv(ROOT / ".env")
     protocol = Protocol()
     ok = True
 
@@ -185,7 +215,7 @@ def cmd_score(args: argparse.Namespace) -> int:
     if not all(judges):
         sys.exit(f"No judge model: pass --judges or set model_ids.{batch.judge_role}")
     score_id = run_scoring(protocol, batch, paths, judges, args.transcripts, args.stage, args.supersedes,
-                           display=args.display)
+                           display=args.display, passes=args.passes)
     _print_summary(paths, score_id)
     return 0
 
@@ -204,6 +234,18 @@ def cmd_dry_run(args: argparse.Namespace) -> int:
     score_id = run_scoring(protocol, batch, paths, [OFFLINE_MODEL], display=args.display)
     _print_summary(paths, score_id)
     print(f"\nDry-run outputs: {paths.root}")
+    return 0
+
+
+def cmd_report(args: argparse.Namespace) -> int:
+    from .share import build_report, write_zips
+
+    protocol = Protocol()
+    batch = protocol.batch(args.batch)
+    paths = RunPaths.for_batch(batch.batch_id, Path(args.runs_dir) if args.runs_dir else None)
+    report = build_report(protocol, batch, paths, args.scoring_run)
+    readable, complete = write_zips(batch, paths, report)
+    print(f"report:        {report}\nreadable zip:  {readable}\ncomplete zip:  {complete}  (includes private/)")
     return 0
 
 
@@ -253,6 +295,15 @@ def main(argv: list[str] | None = None) -> int:
             p.add_argument("--judges", nargs="+", help="judge model IDs (default: the batch's judge role)")
             p.add_argument("--stage", help="stage label for the judge input (default from run plan)")
             p.add_argument("--supersedes", help="earlier scoring_run_id these records correct")
+            p.add_argument("--passes", nargs="+", choices=["globals", "behaviors"],
+                           help="rerun only these judge passes (default: both); with --supersedes, the "
+                                "other pass is carried over from that run for counts.json")
+
+    p = sub.add_parser("report", help="readable HTML report + readable and complete zips for review (no API calls)")
+    p.add_argument("--batch", required=True)
+    p.add_argument("--scoring-run", help="scoring_run_id to report (default: the latest)")
+    p.add_argument("--runs-dir", help="parent directory for batch outputs (default: runs/)")
+    p.set_defaults(func=cmd_report)
 
     args = parser.parse_args(argv)
     try:

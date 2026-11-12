@@ -5,6 +5,9 @@ import json
 
 from miti_chat.checks import check_behaviors, check_globals
 from miti_chat.coding import evaluate_pass, parse_json
+from miti_chat.config import Protocol
+
+VERSION = Protocol().version
 
 
 def _behaviors(protocol, transcript, output):
@@ -98,7 +101,7 @@ def test_markdown_kept_in_spans(protocol):
     t = {"transcript_id": "t1", "messages": [
         {"message_id": "m001", "role": "user", "content": "hi"},
         {"message_id": "m002", "role": "assistant", "content": "## Options\n\n- **Talk** to her?\n- Wait"}]}
-    out = {"protocol_version": "miti-chat-pilot-0.3", "transcript_id": "t1", "status": "ok",
+    out = {"protocol_version": protocol.version, "transcript_id": "t1", "status": "ok",
            "volleys": [{"volley_id": "v1", "assistant_message_ids": ["m002"],
                         "intervening_facilitative_user_ids": [], "boundary_note": ""}],
            "utterances": [
@@ -114,7 +117,7 @@ def test_markdown_kept_in_spans(protocol):
 
 def _globals_output(fixture, evidence):
     rating = {"score": 3, "rationale": "r", "manual_reference": "D", "evidence": evidence}
-    return {"protocol_version": "miti-chat-pilot-0.3", "transcript_id": fixture["transcript"]["transcript_id"],
+    return {"protocol_version": VERSION, "transcript_id": fixture["transcript"]["transcript_id"],
             "status": "ok", "review_notes": [],
             "ratings": {k: copy.deepcopy(rating) for k in
                         ("cultivating_change_talk", "softening_sustain_talk", "partnership", "empathy")}}
@@ -172,7 +175,7 @@ def test_overlap_reported_for_non_adjacent_spans(protocol):
     def u(i, q):
         return {"utterance_id": f"u{i}", "volley_id": "v1", "message_id": "m002", "quote": q,
                 "occurrence_index": 0, "code": "GI", "rationale": "", "manual_reference": "", "review_note": ""}
-    out = {"protocol_version": "miti-chat-pilot-0.3", "transcript_id": "t1", "status": "ok",
+    out = {"protocol_version": protocol.version, "transcript_id": "t1", "status": "ok",
            "volleys": [{"volley_id": "v1", "assistant_message_ids": ["m002"],
                         "intervening_facilitative_user_ids": [], "boundary_note": ""}],
            "utterances": [u(1, "abcdefghij"), u(2, "cd"), u(3, "fgh")], "review_notes": []}

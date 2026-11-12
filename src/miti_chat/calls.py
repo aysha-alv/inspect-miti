@@ -21,7 +21,7 @@ from typing import Any, Callable
 from inspect_ai.model import ChatMessage, GenerateConfig, Model, ModelOutput, get_model
 from inspect_ai.model._model import AttemptTimeoutError, StreamIdleTimeoutError
 
-from . import tokens
+from . import reasoning, tokens
 from .budget import SDK_RETRY_DISABLE_ARGS, AccessRefused, Ledger, is_free, provider, usage_cost
 
 TRUNCATED_STOP_REASONS = {"max_tokens", "model_length"}
@@ -98,13 +98,27 @@ def _seed_note(model_id: str) -> str:
     }.get(provider(model_id), "seed support unknown; not requested")
 
 
+def _sent_request() -> dict[str, Any] | None:
+    """Reasoning/limit fields of the request Inspect just sent (from the sample transcript)."""
+    try:
+        from inspect_ai.event import ModelEvent
+        from inspect_ai.log import transcript
+
+        events = [e for e in transcript().events if isinstance(e, ModelEvent)]
+        call = events[-1].call if events else None
+        return reasoning.request_settings(call.request if call is not None else None)
+    except Exception:
+        return None
+
+
 async def call_model(*, ledger: Ledger, role: str, model_id: str, messages: list[ChatMessage],
-                     max_tokens: int | None, purpose: str) -> CallResult:
+                     max_tokens: int | None, purpose: str, reasoning_effort: str | None = None) -> CallResult:
     """Send one logical request with gated, logged retries. Never raises for provider errors."""
     ex_cfg = ledger.protocol.execution
     max_attempts = int(ex_cfg["transport_retries_max"]) + 1
     attempt_timeout = int(ex_cfg["attempt_timeout_seconds"])
     request_timeout = int(ex_cfg["request_timeout_seconds"])
+    retry_wait = float(ex_cfg.get("retry_wait_seconds", RETRY_WAIT_SECONDS))
 
     result = CallResult(request_id=f"req_{uuid.uuid4().hex[:12]}", ok=False)
     model = _model(model_id)
@@ -125,9 +139,11 @@ async def call_model(*, ledger: Ledger, role: str, model_id: str, messages: list
             # For OpenAI, an unset reasoning_summary makes Inspect send a one-off probe request
             # that would bypass the ledger; setting it explicitly prevents that.
             reasoning_summary="none" if provider(model_id) == "openai" else None,
+            reasoning_effort=reasoning_effort,  # type: ignore[arg-type]
         )
         settings = {
             **config.model_dump(exclude_none=True),
+            "reasoning_provider_mapping": reasoning.PROVIDER_MAPPING.get(provider(model_id)),
             "sampling": "provider defaults (temperature, top_p not set)",
             "seed": _seed_note(model_id),
             "sdk_client_args": {k: v for k, v in model_args(model_id).items() if k != "custom_outputs"},
@@ -157,15 +173,19 @@ async def call_model(*, ledger: Ledger, role: str, model_id: str, messages: list
                           cost_usd=0.0 if status is not None and 400 <= status < 500 else None)
             result.error = f"{type(ex).__name__}: {ex}"[:2000]
             if transient and attempt_number < max_attempts:
-                await asyncio.sleep(max(0.0, min(RETRY_WAIT_SECONDS, deadline - time.monotonic() - 1)))
+                await asyncio.sleep(max(0.0, min(retry_wait, deadline - time.monotonic() - 1)))
                 continue
             result.failure = "request_failed"
             return result
 
         usage = _usage_dict(output)
+        sent = _sent_request()
+        reasoning_ok = reasoning.applied(model_id, reasoning_effort, sent)
         ledger.finish(
             attempt,
             outcome="ok",
+            provider_request_settings=sent,
+            reasoning_applied=reasoning_ok,
             served_model=output.model,
             stop_reason=output.stop_reason,
             usage=usage,
@@ -173,8 +193,13 @@ async def call_model(*, ledger: Ledger, role: str, model_id: str, messages: list
             output_metadata=output.metadata,
             response_text=output.completion,
         )
-        result.ok = True
         result.text = output.completion
+        if reasoning_ok is False:  # never fall back silently to a provider default
+            result.failure = "reasoning_not_applied"
+            result.error = f"requested reasoning_effort={reasoning_effort!r}; sent {sent}"
+            result.stop_reason = output.stop_reason
+            return result
+        result.ok = True
         result.stop_reason = output.stop_reason
         result.served_model = output.model
         result.usage = usage

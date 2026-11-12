@@ -1,26 +1,8 @@
-# Review notes for Shaddy: technical_check_01
+# Review notes for Shaddy
 
-Status: code ready for review for the technical test; live calls disabled. Model IDs,
-prices and the cost estimate still need to be filled in (table below). Everything else
-was checked offline (`miti check`, `miti dry-run`, 45 tests).
-
-## To fill in before approval (Aysha)
-
-| Item | Where | Status |
-|---|---|---|
-| Model IDs for target_openai, target_anthropic, client_provisional, judge_provisional | `config/proposed_settings.json` → after approval `assets/run_plan.json` | to propose |
-| Prices for each model (USD per million tokens, with date checked) | `config/pricing.json` | to fill |
-| Per-role response token limits | proposed: target 4096, client 300, judge_globals 4000, judge_behaviors 16000 | proposed |
-| Cost estimate | `uv run miti estimate --batch technical_check_01` once models and prices are in | pending |
-| Request cap | 36 (18 nominal requests, each retried at most once) | from run plan |
-
-Proposed live commands (after the run plan is updated and committed):
-
-```bash
-uv run miti check
-uv run miti generate --batch technical_check_01
-uv run miti score --batch technical_check_01
-```
+*Written for technical_check_01 (protocol 0.3, October 2026). The implementation notes below
+still apply; the settings and changes for protocol 0.4 and technical_check_02 are in
+[`changes_0.4.md`](changes_0.4.md).*
 
 ## How the spec was implemented, where it needed interpreting
 

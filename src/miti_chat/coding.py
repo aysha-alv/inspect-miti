@@ -247,6 +247,11 @@ def output_dir(paths: RunPaths, scoring_run_id: str, judge_model: str, transcrip
     return paths.coding / scoring_run_id / judge_slug(judge_model) / transcript_id
 
 
+def earlier_record(paths: RunPaths, run: str, judge_model: str, transcript_id: str, pass_name: str) -> dict[str, Any] | None:
+    p = output_dir(paths, run, judge_model, transcript_id) / RECORD_FILES[pass_name]
+    return json.loads(p.read_text(encoding="utf-8")) if p.is_file() else None
+
+
 def link_supersedes(record: dict[str, Any], paths: RunPaths, supersedes_run: str | None) -> None:
     """Corrections are new records linked to the record they replace."""
     if not supersedes_run:
@@ -261,23 +266,41 @@ def link_supersedes(record: dict[str, Any], paths: RunPaths, supersedes_run: str
 
 @solver
 def coding_solver(protocol: Protocol, batch: Batch, paths: RunPaths, scoring_run_id: str, stage: str,
-                  supersedes_run: str | None = None) -> Solver:
+                  supersedes_run: str | None = None, passes: list[str] | None = None) -> Solver:
     ledger = Ledger(paths.ledger, protocol, batch)
+    passes = passes or list(protocol.judging["passes"])
+    effort = protocol.reasoning_effort(batch.judge_role)
 
     async def solve(state: TaskState, generate: Generate) -> TaskState:
         tid, judge_model = state.metadata["transcript_id"], state.metadata["judge_model"]
         transcript = transcripts.load(paths.transcripts / f"{tid}.json")
+        tid_hash = transcripts.content_hash(transcript)
         out_dir = output_dir(paths, scoring_run_id, judge_model, tid)
         out_dir.mkdir(parents=True, exist_ok=True)
         records: dict[str, dict[str, Any]] = {}
         behavior_check: BehaviorCheck | None = None
 
-        for pass_name in protocol.judging["passes"]:
+        for pass_name in passes:
+            settings = {"max_tokens": protocol.token_limit(PASS_TOKEN_LIMIT[pass_name]),
+                        "reasoning_effort": effort, "output_mode": protocol.judging["structured_output_mode"],
+                        "attempt_timeout_seconds": protocol.execution["attempt_timeout_seconds"],
+                        "request_timeout_seconds": protocol.execution["request_timeout_seconds"],
+                        "transport_retries_max": protocol.execution["transport_retries_max"]}
+            old = earlier_record(paths, supersedes_run, judge_model, tid, pass_name) if supersedes_run else None
+            if old is not None and old.get("transcript_sha256") not in (None, tid_hash):
+                rec = skipped_record(pass_name, tid, judge_model, stage, scoring_run_id, protocol,
+                                     "transcript content hash differs from the superseded record")
+                rec["judge_settings"] = settings
+                link_supersedes(rec, paths, supersedes_run)
+                records[pass_name] = rec
+                write_json(out_dir / RECORD_FILES[pass_name], rec)
+                continue
             system, user = judge_system(protocol, pass_name), judge_user(protocol, pass_name, transcript, stage)
             result = await call_model(  # fresh context: only this pass's system + user message
                 ledger=ledger, role="judge", model_id=judge_model,
                 messages=[ChatMessageSystem(content=system), ChatMessageUser(content=user)],
-                max_tokens=protocol.token_limit(PASS_TOKEN_LIMIT[pass_name]), purpose=f"judge_{pass_name}")
+                max_tokens=protocol.token_limit(PASS_TOKEN_LIMIT[pass_name]), purpose=f"judge_{pass_name}",
+                reasoning_effort=effort)
             if not result.ok:
                 rec = skipped_record(pass_name, tid, judge_model, stage, scoring_run_id, protocol,
                                      f"no judge response: {result.failure} ({result.error})")
@@ -295,14 +318,29 @@ def coding_solver(protocol: Protocol, batch: Batch, paths: RunPaths, scoring_run
                         f"response truncated (finish_reason={result.stop_reason})")
                 if pass_name == "behaviors":
                     behavior_check = check  # type: ignore[assignment]
+            rec["judge_settings"] = settings
             link_supersedes(rec, paths, supersedes_run)
             records[pass_name] = rec
             write_json(out_dir / RECORD_FILES[pass_name], rec)
 
+        # a pass that was not rerun is taken (unchanged, by reference) from the superseded run
+        carried: dict[str, str] = {}
+        for pass_name in protocol.judging["passes"]:
+            if pass_name not in records and supersedes_run:
+                old = earlier_record(paths, supersedes_run, judge_model, tid, pass_name)
+                if old is not None:
+                    records[pass_name] = old
+                    carried[pass_name] = supersedes_run
+                    if pass_name == "behaviors" and isinstance(old.get("raw_response"), str):
+                        behavior_check = evaluate_pass("behaviors", old["raw_response"], transcript, protocol)[1]  # type: ignore[assignment]
         g, b = records.get("globals"), records.get("behaviors")
-        if g and b:
-            write_json(out_dir / "counts.json", counts_record(tid, judge_model, g, b, behavior_check))
+        if b and "behaviors" not in carried:
             write_tsvs(out_dir, b, behavior_check)
+        if g and b:
+            counts = counts_record(tid, judge_model, g, b, behavior_check)
+            counts["passes_run_in_this_scoring_run"] = passes
+            counts["passes_carried_from"] = carried
+            write_json(out_dir / "counts.json", counts)
         state.metadata["statuses"] = {k: v["pipeline_validation_status"] for k, v in records.items()}
         return state
 
@@ -311,9 +349,9 @@ def coding_solver(protocol: Protocol, batch: Batch, paths: RunPaths, scoring_run
 
 def coding_task(protocol: Protocol, batch: Batch, paths: RunPaths, transcript_ids: list[str],
                 judge_models: list[str], scoring_run_id: str, stage: str,
-                supersedes_run: str | None = None) -> Task:
+                supersedes_run: str | None = None, passes: list[str] | None = None) -> Task:
     samples = [Sample(id=f"{tid}__{judge_slug(j)}", input=tid, metadata={"transcript_id": tid, "judge_model": j})
                for j in judge_models for tid in transcript_ids]
     return Task(name="miti_coding", dataset=samples,
-                solver=coding_solver(protocol, batch, paths, scoring_run_id, stage, supersedes_run),
+                solver=coding_solver(protocol, batch, paths, scoring_run_id, stage, supersedes_run, passes),
                 metadata={"batch_id": batch.batch_id, "scoring_run_id": scoring_run_id, "stage": stage})

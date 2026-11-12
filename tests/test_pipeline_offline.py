@@ -127,3 +127,71 @@ def test_unapproved_judge_refused(protocol, tmp_path):
     with pytest.raises(SystemExit) as ex:
         run_scoring(protocol, batch, RunPaths(tmp_path / "b"), ["anthropic/other"], display="none")
     assert "not the batch's approved judge" in str(ex.value)
+
+
+def test_technical_check_02_length_and_single_pass_rerun(protocol, tmp_path):
+    """8 replies / 7 follow-ups; then rerun only the behavior pass, linked to the original."""
+    batch = protocol.batch("technical_check_02")
+    paths = RunPaths(tmp_path / batch.batch_id)
+    run_generation(protocol, batch, paths, _overrides(batch), display="none")
+    recs = paths.conversation_records()
+    assert len(recs) == 2
+    for rec in recs:
+        assert rec["status"] == "completed" and rec["lengths"]["assistant_reply_count"] == 8
+        assert len(rec["messages"]) == 16 and rec["protocol_version"] == protocol.version
+        assert rec["client_checks"]["status"] == "checked"
+        assert rec["reasoning_effort"][rec["target_role"]] == "medium"
+    first = run_scoring(protocol, batch, paths, [M], display="none")
+    ledger = json.loads(paths.ledger.read_text())["attempts"]
+    assert len(ledger) == 34  # 16 target + 14 client + 4 judge
+    judge = [a for a in ledger if a["role"] == "judge"]
+    assert {a["requested_settings"]["reasoning_effort"] for a in judge} == {"high"}
+
+    tid = recs[0]["transcript_id"]
+    second = run_scoring(protocol, batch, paths, [M], transcript_ids=[tid], display="none",
+                         supersedes_run=first, passes=["behaviors"])
+    old_dir = paths.coding / first / "mockllm_offline" / tid
+    new_dir = paths.coding / second / "mockllm_offline" / tid
+    assert (old_dir / "behaviors.json").is_file() and (old_dir / "globals.json").is_file()  # originals kept
+    assert not (new_dir / "globals.json").exists()
+    new_b = json.loads((new_dir / "behaviors.json").read_text())
+    assert new_b["supersedes"] == json.loads((old_dir / "behaviors.json").read_text())["record_id"]
+    assert new_b["judge_settings"]["max_tokens"] == protocol.token_limit("judge_behaviors")
+    counts = json.loads((new_dir / "counts.json").read_text())
+    assert counts["passes_carried_from"] == {"globals": first}
+    assert counts["globals_record_id"] == json.loads((old_dir / "globals.json").read_text())["record_id"]
+    assert counts["counts_finalized"] and (new_dir / "thought_units.tsv").is_file()
+    summary = json.loads((paths.coding / second / "batch_summary.json").read_text())
+    assert summary["automated_checks"]["counts"] == {"valid": 1}
+    assert len(json.loads(paths.ledger.read_text())["attempts"]) == 35  # one judge call
+
+
+def test_old_protocol_transcripts_not_rescored(protocol, tmp_path):
+    batch = protocol.batch("technical_check_01")
+    paths = RunPaths(tmp_path / batch.batch_id)
+    run_generation(protocol, batch, paths, _overrides(batch), display="none")
+    rec = paths.conversation_records()[0]
+    rec["protocol_version"] = "miti-chat-pilot-0.3"
+    (paths.conversations / f"{rec['transcript_id']}.json").write_text(json.dumps(rec))
+    score_id = run_scoring(protocol, batch, paths, [M], transcript_ids=[rec["transcript_id"]], display="none")
+    g = json.loads((paths.coding / score_id / "mockllm_offline" / rec["transcript_id"] / "globals.json").read_text())
+    assert g["pipeline_validation_status"] == "skipped" and "miti-chat-pilot-0.3" in g["skip_reason"]
+
+
+def test_report_and_zips(protocol, tmp_path):
+    import zipfile
+
+    from miti_chat.share import build_report, write_zips
+    batch = protocol.batch("technical_check_02")
+    paths = RunPaths(tmp_path / batch.batch_id)
+    run_generation(protocol, batch, paths, _overrides(batch), display="none")
+    run_scoring(protocol, batch, paths, [M], display="none")
+    report = build_report(protocol, batch, paths)
+    html_text = report.read_text()
+    assert "Client checks" in html_text and "Reasoning requested" in html_text and "Global ratings" in html_text
+    readable, complete = write_zips(batch, paths, report)
+    names = zipfile.ZipFile(readable).namelist()
+    assert any(n.endswith("HOW_TO_VIEW.txt") for n in names) and sum(n.endswith(".txt") for n in names) == 3
+    full = zipfile.ZipFile(complete).namelist()
+    assert any("/private/ledger.json" in n for n in full) and any("/private/inspect_logs/" in n for n in full)
+    assert not any("/share/" in n for n in full)

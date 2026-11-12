@@ -1,7 +1,7 @@
 [project]
 name = "miti-chat"
-version = "0.3.0"
-description = "MITI 4.2.1 coding of general-purpose assistant chats with simulated clients (protocol miti-chat-pilot-0.3), built on Inspect AI."
+version = "0.4.0"
+description = "MITI 4.2.1 coding of general-purpose assistant chats with simulated clients (protocol miti-chat-pilot-0.4), built on Inspect AI."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

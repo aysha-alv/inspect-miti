@@ -26,7 +26,7 @@
     ]
   },
   "behavior_output": {
-    "protocol_version": "miti-chat-pilot-0.3",
+    "protocol_version": "miti-chat-pilot-0.4",
     "transcript_id": "offline_fixture_001",
     "status": "ok",
     "volleys": [

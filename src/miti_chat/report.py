@@ -43,6 +43,12 @@ def write_batch_summary(paths: RunPaths, scoring_run_id: str) -> dict[str, Any]:
     completed = {c["transcript_id"] for c in conversations if c["status"] == "completed"}
     obtained = {(r["transcript_id"], r["judge_model"], r["record_type"]) for r in records
                 if r["pipeline_validation_status"] != "skipped"}
+    # a pass carried over from a superseded run (single-pass rerun) also counts as obtained
+    for c in (paths.coding / scoring_run_id).glob("*/*/counts.json"):
+        cr = json.loads(c.read_text(encoding="utf-8"))
+        for p in cr.get("passes_carried_from") or {}:
+            if cr.get(f"{p}_pipeline_status") != "skipped":
+                obtained.add((cr["transcript_id"], cr["judge_model"], p))
     judges = {r["judge_model"] for r in records}
     all_judged = bool(judges) and all((t, j, p) in obtained for t in completed for j in judges
                                       for p in ("globals", "behaviors"))

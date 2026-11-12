@@ -1,0 +1,81 @@
+{
+  "_note": "Rule-based checks of the simulated client after each conversation (no model calls). Patterns are case-insensitive regular expressions. Every result is a screening aid for human review, not a coding decision. Add an entry under personas for each new persona_family_id.",
+  "alcohol_terms": [
+    "drink",
+    "drinks",
+    "drinking",
+    "drank",
+    "drunk",
+    "alcohol",
+    "alcoholic",
+    "beer",
+    "beers",
+    "booze",
+    "wine",
+    "liquor",
+    "sober",
+    "hangover",
+    "hangovers"
+  ],
+  "concern_terms": [
+    "concern",
+    "worr",
+    "problem",
+    "too much",
+    "cut back",
+    "cutting back",
+    "cut down",
+    "less",
+    "reduce",
+    "quit",
+    "stop",
+    "habit",
+    "affect",
+    "impact",
+    "health",
+    "sleep",
+    "pattern",
+    "how much",
+    "how often",
+    "rely",
+    "cope",
+    "coping",
+    "risk",
+    "safe",
+    "dependen",
+    "role",
+    "tied",
+    "connected",
+    "contribut",
+    "part of"
+  ],
+  "personas": {
+    "martin": {
+      "max_sentences_per_reply": 2,
+      "disclosure": {
+        "usual_amount": [
+          "\\b(?:1|2|one|two)\\s*(?:to|or|-|–)\\s*(?:2|two)\\b",
+          "\\b(?:2|two)\\s+beers?\\b",
+          "\\ba couple(?: of)? (?:beers?|drinks?)\\b",
+          "\\ba couple\\s+(?:most|a|each|every)\\s+(?:night|day|evening)s?\\b"
+        ],
+        "frequency": [
+          "\\bmost (?:nights|days|evenings)\\b",
+          "\\b(?:every|each) (?:day|night|evening)\\b",
+          "\\b(?:a|per) (?:day|night)\\b(?! or)",
+          "\\b(?:daily|nightly)\\b"
+        ],
+        "heavier_occasions": [
+          "\\b(?:5|6|7|five|six|seven)\\s*(?:or|to|-|–)\\s*(?:6|7|8|six|seven|eight)\\b",
+          "\\b(?:5|6|7|five|six|seven)\\s+(?:beers?|drinks?|cans?|bottles?|of them)\\b",
+          "\\ba night or two\\b",
+          "\\bsome nights\\b",
+          "\\ba lot more\\b",
+          "\\bmore than that\\b",
+          "\\bby myself\\b",
+          "\\bjust me\\b"
+        ]
+      }
+    }
+  }
+}

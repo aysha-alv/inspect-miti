@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "properties": {
     "protocol_version": {
-      "const": "miti-chat-pilot-0.3"
+      "const": "miti-chat-pilot-0.4"
     },
     "transcript_id": {
       "type": "string"

@@ -2,7 +2,7 @@
 
 Conversation generation and MITI 4.2.1 coding for the study of how general-purpose
 assistants respond to incidental mentions of potentially heavy drinking
-(protocol **miti-chat-pilot-0.3**). Built directly on [Inspect AI](https://inspect.aisi.org.uk/).
+(protocol **miti-chat-pilot-0.4**). Built directly on [Inspect AI](https://inspect.aisi.org.uk/).
 
 A simulated client (playing a persona version such as Martin v2) chats with a target
 assistant that only has the instruction "You are a helpful assistant." The saved,
@@ -11,12 +11,15 @@ manual, in two independent passes: global ratings and behavior codes. The progra
 checks the judge's answers and calculates the official counts and summaries.
 
 The protocol documents from Shaddy are in [`docs/handoff/`](docs/handoff/).
-`README_START_HERE.txt` there is the detailed specification this code implements.
-Implementation choices and open items for review are in [`docs/review_notes.md`](docs/review_notes.md).
+`README_START_HERE.txt` there is the detailed specification this code implements, and
+`04_Changes_after_technical_check_1.docx` is the memo behind protocol 0.4.
+Implementation choices are in [`docs/review_notes.md`](docs/review_notes.md) and the 0.4
+changes in [`docs/changes_0.4.md`](docs/changes_0.4.md).
 
-**Live model calls are disabled.** `assets/run_plan.json` is in offline mode, and every
-paid request is refused until the plan names an approved batch, model IDs, token limits
-and request/dollar limits (see [Going live](#going-live)).
+**Live access.** Every paid request is refused unless `assets/run_plan.json` is in live
+mode for the named, approved batch with model IDs, token limits, reasoning efforts and
+request/dollar limits (see [Going live](#going-live)). The plan is currently approved for
+`technical_check_02` only.
 
 ## Setup
 
@@ -38,16 +41,20 @@ API keys are only needed for live runs. Copy `.env.example` to `.env` and fill i
 |---|---|---|
 | `miti check` | Loads the run plan, personas, prompts and schemas; verifies the manual and PDF hashes against `reference/manual_preparation.json`; runs the supplied fixture and aggregation cases; lists unmet live-access conditions | none |
 | `miti dry-run` | Full generate → score run with an offline stand-in model, to check message exchange, stopping, storage, checks and exports | none |
-| `miti estimate --batch technical_check_01` | Conservative worst-case token and cost estimate | none |
-| `miti generate --batch technical_check_01` | Generates the batch's conversations | client, target |
-| `miti score --batch technical_check_01` | Codes saved, completed transcripts (two judge calls each) | judge |
+| `miti estimate --batch technical_check_02` | Typical and worst-case token and cost estimate | none |
+| `miti generate --batch technical_check_02` | Generates the batch's conversations | client, target |
+| `miti score --batch technical_check_02` | Codes saved, completed transcripts (two judge calls each) | judge |
+| `miti report --batch technical_check_02` | Readable HTML report (settings, cost, client checks, dialogues, coding) plus a readable zip and a complete zip of the batch folder | none |
 | `inspect view --log-dir runs/<batch>/private/inspect_logs` | Browse the Inspect logs (private: they contain persona prompts) | none |
 
 `miti score` options: `--transcripts tr_… tr_…` (default: all in the batch),
 `--judges provider/model …` (default: the batch's judge role), `--stage`
 (default: `technical_test`), `--supersedes <scoring_run_id>` to link corrections to
-earlier records. Re-scoring never calls the client or target and never overwrites
-earlier scores.
+earlier records, `--passes behaviors` (or `globals`) to rerun just one judge pass. With
+`--supersedes`, the pass that wasn't rerun is carried over by reference so `counts.json`
+is complete; the transcript hash is checked against the earlier record and the new pass
+records its settings. Re-scoring never calls the client or target and never overwrites
+earlier scores. Transcripts generated under an older protocol version are not re-scored.
 
 Run `uv run pytest` for the tests (offline; no API calls).
 
@@ -60,9 +67,17 @@ Run `uv run pytest` for the tests (offline; no API calls).
    plus the selected private persona (profile, writing style, readiness, opening type,
    response guides); user = JSON `{generated_followup_index, messages}` with the public
    history. The client's text is appended unchanged as the next user message.
-4. **Stop** right after the 4th assistant reply (`generation.max_assistant_replies`). Early
+4. **Stop** right after the last assistant reply (`max_assistant_replies`: 4 by default,
+   8 for `technical_check_02`; a batch can set its own). Early
    stops (failed request, empty or truncated response, request/cost limit, cancellation)
    keep the partial dialogue and the reason. Every message is saved as it is produced.
+   When a conversation ends, rule-based client checks (no model calls) record whether the
+   indirect cue was due and used, whether the usual amount, frequency and heavier
+   occasions became public (message IDs and sentences), and Martin's sentence counts,
+   with anything uncertain flagged for human review (`config/client_checks.json`).
+   Every call sets reasoning explicitly per role (`generation.reasoning_effort`); the
+   request actually sent is checked and recorded, and a call without the requested
+   effort counts as failed.
 5. **Code** (separate command). For each completed transcript and judge, two fresh calls:
 
    ```
@@ -113,16 +128,19 @@ transcripts with human coders, never `private/`.
 Only after Shaddy approves the named batch:
 
 1. Put the approved model IDs (Inspect `provider/model` form) in `assets/run_plan.json`
-   `model_ids`, and the per-role `response_token_limits`.
+   `model_ids`, the per-role `response_token_limits` and `reasoning_effort`, and add the
+   batch definition (items, conversation length, caps).
 2. Add each model's price to `config/pricing.json` (USD per million input/output tokens).
-3. Set `mode: "live"`, `allow_paid_calls: true`, `approved_batch_id: "technical_check_01"`,
-   `approved_max_cost_usd` and `approved_max_total_requests` (36 for the technical batch).
-4. `miti check` should report `live access for batch technical_check_01: ALLOWED`.
-5. Commit, then run:
+3. Set `mode: "live"`, `allow_paid_calls: true`, `approved_batch_id`,
+   `approved_max_cost_usd` and `approved_max_total_requests`.
+4. Put the API keys in `.env`. `miti check` should report `live access for batch <id>: ALLOWED`.
+5. Commit, then run (currently approved: `technical_check_02`, $20 and 68 attempts):
 
    ```bash
-   uv run miti generate --batch technical_check_01
-   uv run miti score --batch technical_check_01
+   uv run miti estimate --batch technical_check_02
+   uv run miti generate --batch technical_check_02
+   uv run miti score --batch technical_check_02
+   uv run miti report --batch technical_check_02
    ```
 
 Before every paid attempt (including retries) the code re-checks the gate and refuses
@@ -136,11 +154,13 @@ Requests run one at a time.
 ```
 assets/        protocol files from Shaddy: run plan, personas, role prompts, judge prompts, schemas, fixtures
 reference/     MITI 4.2.1 PDF, the prepared manual text for the judge, preparation record, persona template
-config/        pricing.json (needed for live runs), proposed_settings.json (proposal for review)
-docs/          handoff/ (Shaddy's documents), review_notes.md
-src/miti_chat/ config, budget (gate + ledger), calls, conversation, transcripts, coding, checks, counts,
-               estimate, report, provenance, offline, cli
-tests/         offline tests: fixture and aggregation cases, checks C1-C5, gate and limits, end-to-end dry run
+config/        pricing.json (needed for live runs), proposed_settings.json (estimate inputs),
+               client_checks.json (patterns for the rule-based client checks)
+docs/          handoff/ (Shaddy's documents and memos), review_notes.md, changes_0.4.md
+src/miti_chat/ config, budget (gate + ledger), reasoning, calls, conversation, client_checks, transcripts,
+               coding, checks, counts, estimate, report, share, provenance, offline, cli
+tests/         offline tests: fixture and aggregation cases, checks C1-C5, gate and limits, reasoning,
+               client checks, single-pass reruns, end-to-end dry runs of both technical batches
 ```
 
 The MITI manual is an unpublished draft ("Do not cite without permission"). Keep this

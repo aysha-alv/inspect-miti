@@ -1,14 +1,14 @@
 {
-  "protocol_version": "miti-chat-pilot-0.3",
+  "protocol_version": "miti-chat-pilot-0.4",
   "mode": "live",
   "allow_paid_calls": true,
-  "approved_batch_id": "technical_check_01",
-  "approved_max_cost_usd": 5.0,
-  "approved_max_total_requests": 36,
+  "approved_batch_id": "technical_check_02",
+  "approved_max_cost_usd": 20.0,
+  "approved_max_total_requests": 68,
   "model_ids": {
     "target_openai": "openai/gpt-6.1-sol",
-    "target_anthropic": "anthropic/claude-sonnet-5-5",
-    "client_provisional": "anthropic/claude-sonnet-5-5",
+    "target_anthropic": "anthropic/claude-opus-5-5",
+    "client_provisional": "anthropic/claude-opus-5-5",
     "judge_provisional": "anthropic/claude-opus-5-5"
   },
   "persona_files": [
@@ -29,11 +29,18 @@
     "sampling": "Provider defaults initially. Record requested and effective settings, including any supported seed; mark unsupported or unavailable values explicitly.",
     "response_token_limits": {
       "target": 16000,
-      "client": 1000,
-      "judge_globals": 8000,
-      "judge_behaviors": 16000
+      "client": 8000,
+      "judge_globals": 16000,
+      "judge_behaviors": 64000
     },
-    "response_token_limits_note": "Aysha proposes explicit per-role token limits for review before live access. These protect cost and completion, not a speech-duration target. Log any truncation; do not instruct the target to be unusually brief or long.",
+    "response_token_limits_note": "Per-role output caps, including billed reasoning tokens. Set for technical_check_02 (memo of 9 November 2026): the behavior pass gets 64,000 so a long transcript's coding is not cut off; Martin's cap is raised from 1,000 because explicit reasoning also uses the output allowance. Log any truncation; do not instruct the target to be unusually brief or long.",
+    "reasoning_effort": {
+      "target_openai": "medium",
+      "target_anthropic": "medium",
+      "client_provisional": "medium",
+      "judge_provisional": "high"
+    },
+    "reasoning_effort_note": "Explicit per role (memo of 9 November 2026). Sent through Inspect's reasoning_effort: OpenAI Responses API reasoning.effort; Anthropic adaptive thinking with output_config.effort. The same label does not imply equal compute across providers. Live calls are refused if a role has no value or Inspect would not send it, and a call whose sent request lacks the requested effort is treated as failed.",
     "record_lengths": [
       "message_count_by_speaker",
       "word_count_by_speaker",
@@ -87,7 +94,37 @@
       "judge": 4
     },
     "purpose": "Check message exchange, stopping, storage and MITI output formats. Not judge validation or a target-model comparison.",
-    "max_attempts_if_each_request_retries_once": 36
+    "max_attempts_if_each_request_retries_once": 36,
+    "status_note": "Ran on 21 October 2026 under protocol miti-chat-pilot-0.3, Martin v2 with GPT-6.1 Sol and v5 with Claude Sonnet 5.5, 4 assistant replies each. Records in runs/technical_check_01 stay at 0.3."
+  },
+  "revised_technical_pilot": {
+    "batch_id": "technical_check_02",
+    "approved_by": "Shaddy Saba, memo 'Changes after technical check 1 and the next run' (9 November 2026)",
+    "conversation_count": 2,
+    "items": [
+      {
+        "scenario_id": "martin_v2",
+        "target_role": "target_openai"
+      },
+      {
+        "scenario_id": "martin_v5",
+        "target_role": "target_anthropic"
+      }
+    ],
+    "client_role": "client_provisional",
+    "judge_role": "judge_provisional",
+    "max_assistant_replies": 8,
+    "max_generated_client_followups": 7,
+    "stage": "technical_test",
+    "max_nominal_api_requests": 34,
+    "nominal_request_breakdown": {
+      "target": 16,
+      "client": 14,
+      "judge": 4
+    },
+    "max_attempts_if_each_request_retries_once": 68,
+    "approved_max_cost_usd": 20.0,
+    "purpose": "Revised technical pilot: revised disclosure and cue rules, explicit reasoning, longer conversations and the judge timeout fix, changed together to check the pipeline. Not a model comparison and not evidence for which change caused any improvement."
   },
   "later_work_not_authorized": {
     "client_screen": "Proposed six conversations: the three indirect versions with each of two client candidates and one fixed target. The team sets models, length and budget after the technical check.",
@@ -97,11 +134,13 @@
   "execution": {
     "concurrency": 1,
     "transport_retries_max": 1,
-    "attempt_timeout_seconds": 120,
-    "request_timeout_seconds": 300,
+    "attempt_timeout_seconds": 900,
+    "request_timeout_seconds": 1860,
     "retry_scope": "All client, target and judge calls. Retry only transient transport, rate-limit or server errors; at most two attempts per logical request. Configure Inspect and the provider SDK so nested retries cannot exceed this total.",
     "request_cap_unit": "Every provider attempt, including retries.",
     "budget_rule": "Before each attempt, reserve a conservative cost bound from the complete input and output/reasoning limits. Stop before exceeding the approved request or dollar limit; log uncertain charges from timed-out attempts conservatively.",
-    "live_access_gate": "Before every paid provider attempt, refuse unless mode equals live, allow_paid_calls is true, approved_batch_id is nonempty and equals the running batch ID, every model role used by that batch has a nonempty model ID (all four model_ids entries for technical_check_01), approved_max_cost_usd is a finite positive number, and approved_max_total_requests is a positive integer. The request cap counts provider attempts, including retries; continue to apply budget_rule."
+    "live_access_gate": "Before every paid provider attempt, refuse unless mode equals live, allow_paid_calls is true, approved_batch_id is nonempty and equals the running batch ID, every model role used by that batch has a nonempty model ID (all four model_ids entries for the technical batches), approved_max_cost_usd is a finite positive number, and approved_max_total_requests is a positive integer. The request cap counts provider attempts, including retries; continue to apply budget_rule.",
+    "retry_wait_seconds": 5,
+    "timeout_note": "900 s per attempt for the long behavior pass (memo of 9 November 2026); the request timeout covers both attempts plus the retry wait (900 + 5 + 900 < 1860). technical_check_01 ran with 120 s and 300 s."
   }
 }

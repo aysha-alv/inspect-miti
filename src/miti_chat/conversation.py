@@ -33,6 +33,7 @@ from inspect_ai.solver import Generate, Solver, TaskState, solver
 from . import transcripts
 from .budget import Ledger, now
 from .calls import CallResult, call_model
+from .client_checks import client_checks
 from .config import Batch, Protocol
 from .runs import RunPaths, write_json
 
@@ -87,6 +88,8 @@ class Conversation:
     def __init__(self, paths: RunPaths, protocol: Protocol, batch: Batch, scenario: dict[str, Any],
                  target_role: str, models: dict[str, str | None], generation_run_id: str) -> None:
         self.paths = paths
+        self.protocol = protocol
+        self.scenario = scenario
         self.transcript_id = transcripts.new_transcript_id()
         self.messages: list[dict[str, str]] = []
         self.record: dict[str, Any] = {
@@ -102,7 +105,10 @@ class Conversation:
             "target_model": models[target_role],
             "client_role": batch.client_role,
             "client_model": models[batch.client_role],
-            "max_assistant_replies": protocol.generation["max_assistant_replies"],
+            "max_assistant_replies": batch.max_assistant_replies,
+            "max_generated_client_followups": batch.max_generated_client_followups,
+            "reasoning_effort": {target_role: protocol.reasoning_effort(target_role),
+                                 batch.client_role: protocol.reasoning_effort(batch.client_role)},
             "started_at": now(),
             "finished_at": None,
             "status": "in_progress",
@@ -135,6 +141,12 @@ class Conversation:
         r["transcript_sha256"] = transcripts.content_hash(canonical)
         r["lengths"] = transcripts.length_record(self.messages)
         r["provider_token_usage"] = _usage_by_role(r["messages"])
+        # rule-based client checks (no model calls): cue, disclosure, reply length
+        try:
+            r["client_checks"] = client_checks(self.protocol, self.scenario, r["messages"])
+        except Exception as ex:  # a screening aid must never lose a paid conversation
+            r["client_checks"] = {"status": "error", "error": f"{type(ex).__name__}: {ex}",
+                                  "flags_for_human_review": ["client checks failed to run; review by reading"]}
         self.save()
         self.paths.append_key({**r, "status": status})
 
@@ -161,7 +173,8 @@ def _source(result: CallResult, generated_by: str) -> dict[str, Any]:
 def _check(conv: Conversation, result: CallResult, who: str) -> bool:
     """True if the response can be appended; otherwise finish the conversation as partial."""
     if not result.ok:
-        conv.finish("partial", f"{who}_{result.failure}", result.error)
+        conv.finish("partial", f"{who}_{result.failure}", result.error,
+                    unappended=result if result.text else None)
     elif result.empty:
         conv.finish("partial", f"{who}_empty_response", unappended=result)
     elif result.truncated:
@@ -175,9 +188,8 @@ def _check(conv: Conversation, result: CallResult, who: str) -> bool:
 @solver
 def conversation_solver(protocol: Protocol, batch: Batch, paths: RunPaths, models: dict[str, str | None],
                         generation_run_id: str) -> Solver:
-    g = protocol.generation
-    max_replies = int(g["max_assistant_replies"])
-    max_followups = int(g["max_generated_client_followups"])
+    max_replies = batch.max_assistant_replies
+    max_followups = batch.max_generated_client_followups
     ledger = Ledger(paths.ledger, protocol, batch)
 
     async def solve(state: TaskState, generate: Generate) -> TaskState:
@@ -194,7 +206,8 @@ def conversation_solver(protocol: Protocol, batch: Batch, paths: RunPaths, model
             while True:
                 result = await call_model(ledger=ledger, role="target", model_id=target_model,
                                           messages=target_view(protocol, conv.messages),
-                                          max_tokens=protocol.token_limit("target"), purpose="target_reply")
+                                          max_tokens=protocol.token_limit("target"), purpose="target_reply",
+                                          reasoning_effort=protocol.reasoning_effort(target_role))
                 if not _check(conv, result, "target"):
                     break
                 conv.add("assistant", result.text, _source(result, "target"))
@@ -210,7 +223,8 @@ def conversation_solver(protocol: Protocol, batch: Batch, paths: RunPaths, model
                     ledger=ledger, role="client", model_id=client_model,
                     messages=[ChatMessageSystem(content=client_system),
                               ChatMessageUser(content=client_user_payload(followup_index, conv.messages))],
-                    max_tokens=protocol.token_limit("client"), purpose=f"client_followup_{followup_index}")
+                    max_tokens=protocol.token_limit("client"), purpose=f"client_followup_{followup_index}",
+                    reasoning_effort=protocol.reasoning_effort(batch.client_role))
                 if not _check(conv, result, "client"):
                     break
                 conv.add("user", result.text, {**_source(result, "client"), "generated_followup_index": followup_index})
